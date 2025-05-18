@@ -141,23 +141,22 @@ export class DatabaseStorage implements IStorage {
       .innerJoin(users, eq(photographers.userId, users.id))
       .where(eq(photographers.isActive, true));
 
+    // Apply filters using query conditions
+    let conditions = [];
+    
     if (filter?.city) {
-      query = query.where(eq(photographers.city, filter.city));
+      conditions.push(eq(photographers.city, filter.city));
     }
-
-    if (filter?.minPrice && filter?.maxPrice) {
-      query = query.where(
-        and(
-          gte(photographers.baseRate, filter.minPrice), 
-          lte(photographers.baseRate, filter.maxPrice)
-        )
-      );
-    } else if (filter?.minPrice) {
-      query = query.where(gte(photographers.baseRate, filter.minPrice));
-    } else if (filter?.maxPrice) {
-      query = query.where(lte(photographers.baseRate, filter.maxPrice));
+    
+    if (filter?.minPrice) {
+      conditions.push(gte(photographers.baseRate, filter.minPrice));
     }
-
+    
+    if (filter?.maxPrice) {
+      conditions.push(lte(photographers.baseRate, filter.maxPrice));
+    }
+    
+    // Execute the query with all conditions
     const photographersData = await query;
 
     // Fetch additional data for each photographer
@@ -176,13 +175,13 @@ export class DatabaseStorage implements IStorage {
           )
           .where(eq(photographerCategories.photographerId, photographer.id));
 
-        const photographerCategories = categoriesJoin.map((c) => ({
+        const photographerCats = categoriesJoin.map((c) => ({
           id: c.categoryId,
           name: c.name,
         }));
 
         // Filter by category if specified
-        if (filter?.category && !photographerCategories.some(c => c.name === filter.category)) {
+        if (filter?.category && !photographerCats.some(c => c.name === filter.category)) {
           return null;
         }
 
@@ -279,7 +278,7 @@ export class DatabaseStorage implements IStorage {
       )
       .where(eq(photographerCategories.photographerId, id));
 
-    const photographerCategories = categoriesJoin.map((c) => ({
+    const photographerCats = categoriesJoin.map((c: any) => ({
       id: c.categoryId,
       name: c.name,
     }));
