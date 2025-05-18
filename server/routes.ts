@@ -102,8 +102,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(photographer);
     } catch (error) {
       console.error("Error creating photographer:", error);
-      if (error instanceof ZodError) {
-        return res.status(400).json({ message: "Invalid data provided", errors: error.errors });
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data provided", errors: error.format() });
       }
       res.status(500).json({ message: "Failed to create photographer" });
     }
@@ -131,8 +131,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(updatedPhotographer);
     } catch (error) {
       console.error("Error updating photographer:", error);
-      if (error instanceof ZodError) {
-        return res.status(400).json({ message: "Invalid data provided", errors: error.errors });
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data provided", errors: error.format() });
       }
       res.status(500).json({ message: "Failed to update photographer" });
     }
@@ -173,8 +173,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(portfolioItem);
     } catch (error) {
       console.error("Error adding portfolio item:", error);
-      if (error instanceof ZodError) {
-        return res.status(400).json({ message: "Invalid data provided", errors: error.errors });
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data provided", errors: error.format() });
       }
       res.status(500).json({ message: "Failed to add portfolio item" });
     }
@@ -212,8 +212,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(newAvailability);
     } catch (error) {
       console.error("Error adding availability:", error);
-      if (error instanceof ZodError) {
-        return res.status(400).json({ message: "Invalid data provided", errors: error.errors });
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data provided", errors: error.format() });
       }
       res.status(500).json({ message: "Failed to add availability" });
     }
@@ -336,8 +336,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     } catch (error) {
       console.error("Error creating booking:", error);
-      if (error instanceof ZodError) {
-        return res.status(400).json({ message: "Invalid data provided", errors: error.errors });
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data provided", errors: error.format() });
       }
       res.status(500).json({ message: "Failed to create booking" });
     }
@@ -427,8 +427,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(review);
     } catch (error) {
       console.error("Error creating review:", error);
-      if (error instanceof ZodError) {
-        return res.status(400).json({ message: "Invalid data provided", errors: error.errors });
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data provided", errors: error.format() });
       }
       res.status(500).json({ message: "Failed to create review" });
     }
@@ -458,7 +458,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         booking.customerId !== userId && 
         !(user.role === 'photographer' && booking.photographerId === (await storage.getPhotographerByUserId(userId))?.id)
       ) {
-        return res.status(403).json({ message: "Not authorized to view these deliverables" });
+        return res.status(403).json({ message: "Not authorized to view deliverables" });
       }
       
       const deliverables = await storage.getDeliverables(bookingId);
@@ -480,26 +480,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Booking not found" });
       }
       
-      const user = await storage.getUser(userId);
+      const photographer = await storage.getPhotographerByUserId(userId);
       
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-      
-      // Validate that the user is the photographer for this booking or an admin
-      if (
-        user.role !== 'admin' && 
-        !(user.role === 'photographer' && booking.photographerId === (await storage.getPhotographerByUserId(userId))?.id)
-      ) {
-        return res.status(403).json({ message: "Not authorized to add deliverables to this booking" });
+      if (!photographer || booking.photographerId !== photographer.id) {
+        const user = await storage.getUser(userId);
+        if (user?.role !== 'admin') {
+          return res.status(403).json({ message: "Not authorized to add deliverables" });
+        }
       }
       
       const deliverable = await storage.addDeliverable(req.body);
       res.status(201).json(deliverable);
     } catch (error) {
       console.error("Error adding deliverable:", error);
-      if (error instanceof ZodError) {
-        return res.status(400).json({ message: "Invalid data provided", errors: error.errors });
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data provided", errors: error.format() });
       }
       res.status(500).json({ message: "Failed to add deliverable" });
     }
@@ -518,17 +513,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Check authorization
-      const user = await storage.getUser(userId);
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-      
+      const photographer = await storage.getPhotographerByUserId(userId);
       if (
-        user.role !== 'admin' && 
         booking.customerId !== userId && 
-        !(user.role === 'photographer' && booking.photographerId === (await storage.getPhotographerByUserId(userId))?.id)
+        !(photographer && booking.photographerId === photographer.id)
       ) {
-        return res.status(403).json({ message: "Not authorized to view these messages" });
+        const user = await storage.getUser(userId);
+        if (user?.role !== 'admin') {
+          return res.status(403).json({ message: "Not authorized to view messages" });
+        }
       }
       
       const messages = await storage.getBookingMessages(bookingId);
@@ -542,50 +535,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/messages', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      const { bookingId } = req.body;
       
-      const messageData = {
-        ...req.body,
-        senderId: userId,
-      };
-      
-      const booking = await storage.getBookingById(messageData.bookingId);
+      const booking = await storage.getBookingById(bookingId);
       
       if (!booking) {
         return res.status(404).json({ message: "Booking not found" });
       }
       
       // Check authorization
-      const user = await storage.getUser(userId);
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-      
-      const photographer = user.role === 'photographer' 
-        ? await storage.getPhotographerByUserId(userId)
-        : null;
+      const photographer = await storage.getPhotographerByUserId(userId);
+      const photographerUser = await storage.getPhotographerUserById(booking.photographerId);
       
       if (
-        user.role !== 'admin' && 
         booking.customerId !== userId && 
-        !(photographer && booking.photographerId === photographer.id)
+        photographerUser?.id !== userId
       ) {
-        return res.status(403).json({ message: "Not authorized to send messages for this booking" });
+        const user = await storage.getUser(userId);
+        if (user?.role !== 'admin') {
+          return res.status(403).json({ message: "Not authorized to send messages" });
+        }
       }
       
-      // Determine receiver
-      if (booking.customerId === userId) {
-        const photographerUser = await storage.getPhotographerUserById(booking.photographerId);
-        messageData.receiverId = photographerUser.id;
-      } else {
-        messageData.receiverId = booking.customerId;
-      }
+      const message = await storage.sendMessage({
+        ...req.body,
+        senderId: userId,
+      });
       
-      const message = await storage.sendMessage(messageData);
       res.status(201).json(message);
     } catch (error) {
       console.error("Error sending message:", error);
-      if (error instanceof ZodError) {
-        return res.status(400).json({ message: "Invalid data provided", errors: error.errors });
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data provided", errors: error.format() });
       }
       res.status(500).json({ message: "Failed to send message" });
     }
@@ -598,7 +579,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.getUser(userId);
       
       if (!user || user.role !== 'admin') {
-        return res.status(403).json({ message: "Unauthorized - Admin access required" });
+        return res.status(403).json({ message: "Unauthorized" });
       }
       
       const users = await storage.getAllUsers();
@@ -618,70 +599,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.getUser(userId);
       
       if (!user || user.role !== 'admin') {
-        return res.status(403).json({ message: "Unauthorized - Admin access required" });
+        return res.status(403).json({ message: "Unauthorized" });
       }
       
-      if (typeof isVerified !== 'boolean') {
-        return res.status(400).json({ message: "isVerified must be a boolean" });
+      const photographer = await storage.getPhotographerById(photographerId);
+      
+      if (!photographer) {
+        return res.status(404).json({ message: "Photographer not found" });
       }
       
-      const photographer = await storage.updatePhotographerVerification(photographerId, isVerified);
-      res.json(photographer);
+      const updatedPhotographer = await storage.updatePhotographerVerification(
+        photographerId, 
+        isVerified
+      );
+      
+      res.json(updatedPhotographer);
     } catch (error) {
       console.error("Error updating photographer verification:", error);
       res.status(500).json({ message: "Failed to update photographer verification" });
-    }
-  });
-
-  // ===== PAYMENT ROUTES =====
-  app.post('/api/create-payment-intent', isAuthenticated, async (req: any, res) => {
-    if (!stripe) {
-      return res.status(500).json({ message: "Stripe is not configured" });
-    }
-    
-    try {
-      const { bookingId } = req.body;
-      const userId = req.user.claims.sub;
-      
-      const booking = await storage.getBookingById(bookingId);
-      
-      if (!booking) {
-        return res.status(404).json({ message: "Booking not found" });
-      }
-      
-      if (booking.customerId !== userId) {
-        return res.status(403).json({ message: "Not authorized to pay for this booking" });
-      }
-      
-      if (booking.stripePaymentIntentId) {
-        // Retrieve existing payment intent
-        const paymentIntent = await stripe.paymentIntents.retrieve(booking.stripePaymentIntentId);
-        
-        res.json({
-          clientSecret: paymentIntent.client_secret,
-        });
-      } else {
-        // Create new payment intent
-        const paymentIntent = await stripe.paymentIntents.create({
-          amount: booking.totalAmount,
-          currency: 'usd',
-          metadata: {
-            customerId: userId,
-            photographerId: booking.photographerId.toString(),
-            bookingId: booking.id.toString(),
-          },
-        });
-        
-        // Update booking with payment intent id
-        await storage.updateBookingPaymentIntent(booking.id, paymentIntent.id);
-        
-        res.json({
-          clientSecret: paymentIntent.client_secret,
-        });
-      }
-    } catch (error) {
-      console.error("Error creating payment intent:", error);
-      res.status(500).json({ message: "Failed to create payment intent" });
     }
   });
 
