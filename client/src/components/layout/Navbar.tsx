@@ -135,16 +135,16 @@ const Navbar = () => {
             </div>
             <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
               {navLinks.map((link) => (
-                <Link key={link.href} href={link.href}>
-                  <a
-                    className={`${
-                      link.active
-                        ? "border-primary-500 text-gray-900"
-                        : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
-                    } inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
-                  >
-                    {link.label}
-                  </a>
+                <Link 
+                  key={link.href} 
+                  href={link.href}
+                  className={`${
+                    link.active
+                      ? "border-primary-500 text-gray-900"
+                      : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
+                  } inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
+                >
+                  {link.label}
                 </Link>
               ))}
             </div>
@@ -169,17 +169,17 @@ const Navbar = () => {
               <SheetContent side="left">
                 <div className="mt-6 flex flex-col space-y-3">
                   {navLinks.map((link) => (
-                    <Link key={link.href} href={link.href}>
-                      <a
-                        className={`${
-                          link.active
-                            ? "bg-primary-50 border-primary-500 text-primary-700"
-                            : "border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800"
-                        } block pl-3 pr-4 py-2 border-l-4 text-base font-medium`}
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        {link.label}
-                      </a>
+                    <Link 
+                      key={link.href} 
+                      href={link.href}
+                      className={`${
+                        link.active
+                          ? "bg-primary-50 border-primary-500 text-primary-700"
+                          : "border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800"
+                      } block pl-3 pr-4 py-2 border-l-4 text-base font-medium`}
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      {link.label}
                     </Link>
                   ))}
                   <div className="pt-4 pb-3 border-t border-gray-200">
