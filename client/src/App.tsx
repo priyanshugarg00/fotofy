@@ -16,6 +16,9 @@ import CustomerDashboard from "@/pages/CustomerDashboard";
 import PhotographerDashboard from "@/pages/PhotographerDashboard";
 import AdminDashboard from "@/pages/AdminDashboard";
 import Booking from "@/pages/Booking";
+import About from "@/pages/About";
+import Contact from "@/pages/Contact";
+import JoinPhotographer from "@/pages/JoinPhotographer";
 
 const stripePromise = import.meta.env.VITE_STRIPE_PUBLIC_KEY
   ? loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY)
@@ -38,6 +41,9 @@ function Router() {
           <Route path="/dashboard/customer" component={CustomerDashboard} />
           <Route path="/dashboard/photographer" component={PhotographerDashboard} />
           <Route path="/dashboard/admin" component={AdminDashboard} />
+          <Route path="/about" component={About} />
+          <Route path="/contact" component={Contact} />
+          <Route path="/join-photographer" component={JoinPhotographer} />
           <Route component={NotFound} />
         </Switch>
       </main>
