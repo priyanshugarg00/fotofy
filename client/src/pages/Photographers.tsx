@@ -117,7 +117,7 @@ const Photographers = () => {
                       <SelectValue placeholder="All Categories" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All Categories</SelectItem>
+                      <SelectItem value="all">All Categories</SelectItem>
                       {categories?.map((category: any) => (
                         <SelectItem key={category.id} value={category.name}>
                           {category.name}
@@ -137,7 +137,7 @@ const Photographers = () => {
                       <SelectValue placeholder="All Cities" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All Cities</SelectItem>
+                      <SelectItem value="all">All Cities</SelectItem>
                       {cities.map((city) => (
                         <SelectItem key={city} value={city}>
                           {city}

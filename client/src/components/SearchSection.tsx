@@ -45,7 +45,7 @@ const SearchSection = () => {
   ];
 
   const priceRanges = [
-    { label: "Any price", value: "" },
+    { label: "Any price", value: "any" },
     { label: "₹1,000 - ₹5,000", value: "1000-5000" },
     { label: "₹5,000 - ₹10,000", value: "5000-10000" },
     { label: "₹10,000 - ₹25,000", value: "10000-25000" },
