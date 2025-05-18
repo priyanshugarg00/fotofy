@@ -123,7 +123,8 @@ export class DatabaseStorage implements IStorage {
 
   // ===== PHOTOGRAPHER OPERATIONS =====
   async getPhotographers(filter?: any): Promise<any[]> {
-    let query = db
+    // Create base query
+    const query = db
       .select({
         id: photographers.id,
         userId: photographers.userId,
@@ -140,23 +141,8 @@ export class DatabaseStorage implements IStorage {
       .from(photographers)
       .innerJoin(users, eq(photographers.userId, users.id))
       .where(eq(photographers.isActive, true));
-
-    // Apply filters using query conditions
-    let conditions = [];
     
-    if (filter?.city) {
-      conditions.push(eq(photographers.city, filter.city));
-    }
-    
-    if (filter?.minPrice) {
-      conditions.push(gte(photographers.baseRate, filter.minPrice));
-    }
-    
-    if (filter?.maxPrice) {
-      conditions.push(lte(photographers.baseRate, filter.maxPrice));
-    }
-    
-    // Execute the query with all conditions
+    // Execute the query
     const photographersData = await query;
 
     // Fetch additional data for each photographer
