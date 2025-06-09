@@ -43,7 +43,7 @@ const HeroSection = () => {
             </div>
             <div className="ml-3 inline-flex">
               <Button asChild>
-                <Link href={getActionLink()}>
+                <Link href={user?.role === "photographer" ? "/dashboard/photographer" : "/photographer-signup"}>
                   {user?.role === "photographer" ? "Photographer Dashboard" : "Join as Photographer"}
                 </Link>
               </Button>

@@ -15,13 +15,12 @@ import {
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { DatePicker } from "@/components/ui/calendar";
-import { Calendar } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
 import PhotographerCard from "@/components/PhotographerCard";
 
 const Photographers = () => {
-  const [, params] = useLocation();
-  const searchParams = new URLSearchParams(params.includes('?') ? params.split('?')[1] : '');
+  const [location, ] = useLocation();
+  const searchParams = new URLSearchParams(location.includes('?') ? location.split('?')[1] : '');
   
   const [filters, setFilters] = useState({
     category: searchParams.get('category') || '',
@@ -50,6 +49,7 @@ const Photographers = () => {
   // Fetch categories
   const { data: categories } = useQuery({
     queryKey: ["/api/categories"],
+    initialData: [],
   });
 
   // Fetch photographers with filters
@@ -118,7 +118,7 @@ const Photographers = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Categories</SelectItem>
-                      {categories?.map((category: any) => (
+                      {categories && categories.map((category: any) => (
                         <SelectItem key={category.id} value={category.name}>
                           {category.name}
                         </SelectItem>
@@ -149,15 +149,16 @@ const Photographers = () => {
                 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
-                  <div className="relative">
-                    <Input
-                      type="date"
-                      value={filters.date}
-                      onChange={(e) => handleFilterChange("date", e.target.value)}
-                      className="w-full"
-                    />
-                    <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  </div>
+                  <Calendar
+                    mode="single"
+                    selected={filters.date ? new Date(filters.date) : undefined}
+                    onSelect={(date) => {
+                      if (date) {
+                        handleFilterChange("date", date.toISOString().split('T')[0]);
+                      }
+                    }}
+                    className="rounded-md border w-full"
+                  />
                 </div>
                 
                 <div>

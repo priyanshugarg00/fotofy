@@ -38,7 +38,7 @@ const PhotographerCTA = () => {
                     asChild
                     variant="secondary"
                   >
-                    <Link href={isAuthenticated ? "/dashboard/customer" : "/api/login"}>
+                    <Link href="/photographer-signup">
                       Join as Photographer
                     </Link>
                   </Button>

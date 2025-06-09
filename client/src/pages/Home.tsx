@@ -1,16 +1,18 @@
 import { useQuery } from "@tanstack/react-query";
+import PhotographerCard from "@/components/PhotographerCard";
+import type { Photographer } from "@/components/PhotographerCard";
+import PhotoCategories from "@/components/PhotoCategories";
+import type { Category } from "@/components/PhotoCategories";
 import { useEffect } from "react";
 import { Link } from "wouter";
 import HeroSection from "@/components/HeroSection";
 import SearchSection from "@/components/SearchSection";
-import PhotoCategories from "@/components/PhotoCategories";
-import PhotographerCard from "@/components/PhotographerCard";
 import HowItWorks from "@/components/HowItWorks";
 import Testimonials from "@/components/Testimonials";
 import PhotographerCTA from "@/components/PhotographerCTA";
 
 const Home = () => {
-  const { data: categories } = useQuery({
+  const { data: categories } = useQuery<Category[]>({
     queryKey: ["/api/categories"],
   });
 
@@ -82,7 +84,7 @@ const Home = () => {
                 </div>
               ))
             ) : (
-              featuredPhotographers?.slice(0, 3).map((photographer) => (
+              featuredPhotographers?.slice(0, 3).map((photographer: Photographer) => (
                 <PhotographerCard key={photographer.id} photographer={photographer} />
               ))
             )}

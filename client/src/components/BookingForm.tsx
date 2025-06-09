@@ -160,7 +160,7 @@ const BookingForm = ({ photographer, onSubmit }: BookingFormProps) => {
                       return (
                         date < new Date(new Date().setHours(0, 0, 0, 0)) ||
                         !availableDates.some(
-                          (availableDate) =>
+                          (availableDate: Date) =>
                             availableDate.toDateString() === date.toDateString()
                         )
                       );

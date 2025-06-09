@@ -101,5 +101,5 @@ const PhotographerCard = ({ photographer }: PhotographerCardProps) => {
     </Card>
   );
 };
-
+export { Photographer };
 export default PhotographerCard;

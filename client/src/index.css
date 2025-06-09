@@ -1,3 +1,4 @@
+/* client/src/index.css */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -47,12 +48,6 @@
 --radius: 0.5rem;
   }
 
-@layer base {
-  * {
-    @apply border-border;
+body {
+    @apply font-sans antialiased bg-background text-foreground border-border;
   }
-
-  body {
-    @apply font-sans antialiased bg-background text-foreground;
-  }
-}

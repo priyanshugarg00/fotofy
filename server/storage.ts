@@ -1,34 +1,43 @@
 import {
   users,
-  type User,
-  type UpsertUser,
   photographers,
-  type Photographer,
-  type InsertPhotographer,
-  categories,
-  photographerCategories,
-  portfolioItems,
-  type PortfolioItem,
-  type InsertPortfolioItem,
-  availability,
-  type Availability,
-  type InsertAvailability,
+  portfolios,
+  services,
   bookings,
-  type Booking,
-  type InsertBooking,
   reviews,
-  type Review,
-  type InsertReview,
+  payouts,
   deliverables,
-  type Deliverable,
-  type InsertDeliverable,
   messages,
+  type User,
+  type Photographer,
+  type PortfolioItem,
+  type Booking,
+  type Review,
+  type Deliverable,
   type Message,
-  type InsertMessage
 } from "@shared/schema";
 import { db } from "./db";
-import { and, asc, desc, eq, gte, inArray, lte, or, sql } from "drizzle-orm";
-import { format } from "date-fns";
+import { and, asc, desc, eq, sql } from "drizzle-orm";
+import bcrypt from "bcrypt";
+import type {
+  User as UserType,
+  Photographer as PhotographerType,
+  PortfolioItem as PortfolioItemType,
+  Booking as BookingType,
+  Review as ReviewType,
+  Deliverable as DeliverableType,
+  Message as MessageType,
+} from "@shared/schema";
+type UpsertUser = typeof users.$inferInsert;
+type InsertPhotographer = typeof photographers.$inferInsert;
+type InsertPortfolioItem = typeof portfolios.$inferInsert;
+type InsertAvailability = typeof availability.$inferInsert;
+type InsertBooking = typeof bookings.$inferInsert;
+type InsertReview = typeof reviews.$inferInsert;
+type InsertDeliverable = typeof deliverables.$inferInsert;
+type InsertMessage = typeof messages.$inferInsert;
+import { type AvailabilityType } from "@shared/availability";
+import { availability } from "@shared/availability";
 
 // Interface for storage operations
 export interface IStorage {
@@ -37,7 +46,12 @@ export interface IStorage {
   upsertUser(user: UpsertUser): Promise<User>;
   updateUserRole(userId: string, role: string): Promise<User>;
   getAllUsers(): Promise<User[]>;
-  
+
+  // New user operations for email/password auth
+  createUserWithEmailAndPassword(user: { email: string; passwordHash: string; name?: string }): Promise<User>;
+  getUserByEmail(email: string): Promise<User | undefined>;
+  verifyPassword(password: string, passwordHash: string): Promise<boolean>;
+
   // Photographer operations
   getPhotographers(filter?: any): Promise<any[]>;
   getPhotographerById(id: number): Promise<any | undefined>;
@@ -46,47 +60,49 @@ export interface IStorage {
   createPhotographer(data: InsertPhotographer): Promise<Photographer>;
   updatePhotographer(id: number, data: Partial<InsertPhotographer>): Promise<Photographer>;
   updatePhotographerVerification(id: number, isVerified: boolean): Promise<Photographer>;
-  
+
   // Category operations
   getCategories(): Promise<any[]>;
   getCategoryById(id: number): Promise<any | undefined>;
-  
+
   // Portfolio operations
   getPortfolio(photographerId: number): Promise<PortfolioItem[]>;
   addPortfolioItem(item: InsertPortfolioItem): Promise<PortfolioItem>;
-  
+
   // Availability operations
-  getAvailability(photographerId: number): Promise<Availability[]>;
-  addAvailability(data: InsertAvailability): Promise<Availability>;
+  getAvailability(photographerId: number): Promise<AvailabilityType[]>;
+  addAvailability(data: InsertAvailability): Promise<AvailabilityType>;
   checkAvailability(photographerId: number, date: string, startTime: string, endTime: string): Promise<boolean>;
-  
+
   // Booking operations
   getAllBookings(): Promise<any[]>;
-  getCustomerBookings(customerId: string): Promise<any[]>;
+  getCustomerBookings(customerId: number): Promise<any[]>;
   getPhotographerBookings(photographerId: number): Promise<any[]>;
   getBookingById(id: number): Promise<any | undefined>;
   createBooking(data: InsertBooking): Promise<Booking>;
   updateBookingStatus(id: number, status: string): Promise<Booking>;
   updateBookingPaymentIntent(id: number, paymentIntentId: string): Promise<Booking>;
-  
+
   // Review operations
   getPhotographerReviews(photographerId: number): Promise<any[]>;
   getReviewByBookingId(bookingId: number): Promise<Review | undefined>;
   createReview(data: InsertReview): Promise<Review>;
-  
+
   // Deliverable operations
   getDeliverables(bookingId: number): Promise<Deliverable[]>;
   addDeliverable(data: InsertDeliverable): Promise<Deliverable>;
-  
+
   // Message operations
   getBookingMessages(bookingId: number): Promise<Message[]>;
   sendMessage(data: InsertMessage): Promise<Message>;
 }
 
 export class DatabaseStorage implements IStorage {
+  private saltRounds = 10;
+
   // ===== USER OPERATIONS =====
   async getUser(id: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
+    const [user] = await db.select().from(users).where(eq(users.id, parseInt(id, 10)));
     return user;
   }
 
@@ -98,10 +114,8 @@ export class DatabaseStorage implements IStorage {
         target: users.id,
         set: {
           email: userData.email,
-          firstName: userData.firstName,
-          lastName: userData.lastName,
-          profileImageUrl: userData.profileImageUrl,
-          updatedAt: new Date(),
+          name: userData.name,
+          phone: userData.phone,
         },
       })
       .returning();
@@ -111,8 +125,8 @@ export class DatabaseStorage implements IStorage {
   async updateUserRole(userId: string, role: string): Promise<User> {
     const [user] = await db
       .update(users)
-      .set({ role, updatedAt: new Date() })
-      .where(eq(users.id, userId))
+      .set({ role: role })
+      .where(eq(users.id, parseInt(userId, 10)))
       .returning();
     return user;
   }
@@ -121,27 +135,46 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(users);
   }
 
+  // ===== NEW USER OPERATIONS (EMAIL/PASSWORD AUTH) =====
+  async createUserWithEmailAndPassword(user: { email: string; passwordHash: string; name?: string }): Promise<User> {
+    const [newUser] = await db
+      .insert(users)
+      .values({
+        email: user.email,
+        passwordHash: user.passwordHash,
+        name: user.name,
+        role: 'customer', // Default role
+      })
+      .returning();
+    return newUser;
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user;
+  }
+
+  async verifyPassword(password: string, passwordHash: string): Promise<boolean> {
+    return bcrypt.compare(password, passwordHash);
+  }
+
   // ===== PHOTOGRAPHER OPERATIONS =====
   async getPhotographers(filter?: any): Promise<any[]> {
     // Create base query
     const query = db
       .select({
         id: photographers.id,
-        userId: photographers.userId,
         bio: photographers.bio,
         city: photographers.city,
-        state: photographers.state,
-        baseRate: photographers.baseRate,
+        lat: photographers.lat,
+        lng: photographers.lng,
+        avgRating: photographers.avgRating,
+        totalReviews: photographers.totalReviews,
         isVerified: photographers.isVerified,
-        isActive: photographers.isActive,
-        firstName: users.firstName,
-        lastName: users.lastName,
-        profileImageUrl: users.profileImageUrl,
       })
       .from(photographers)
-      .innerJoin(users, eq(photographers.userId, users.id))
-      .where(eq(photographers.isActive, true));
-    
+      .innerJoin(users, eq(photographers.id, users.id));
+
     // Execute the query
     const photographersData = await query;
 
@@ -151,25 +184,16 @@ export class DatabaseStorage implements IStorage {
         // Get categories
         const categoriesJoin = await db
           .select({
-            categoryId: photographerCategories.categoryId,
-            name: categories.name,
+            categoryId: services.id,
+            name: services.shootType,
           })
-          .from(photographerCategories)
-          .innerJoin(
-            categories,
-            eq(photographerCategories.categoryId, categories.id)
-          )
-          .where(eq(photographerCategories.photographerId, photographer.id));
+          .from(services)
+          .where(eq(services.photographerId, photographer.id));
 
-        const photographerCats = categoriesJoin.map((c) => ({
+        const photographerCats = categoriesJoin.map((c: any) => ({
           id: c.categoryId,
           name: c.name,
         }));
-
-        // Filter by category if specified
-        if (filter?.category && !photographerCats.some(c => c.name === filter.category)) {
-          return null;
-        }
 
         // Get average rating
         const ratingResult = await db
@@ -178,35 +202,24 @@ export class DatabaseStorage implements IStorage {
             count: sql<number>`COUNT(${reviews.id})`,
           })
           .from(reviews)
-          .where(eq(reviews.photographerId, photographer.id));
+          .innerJoin(bookings, eq(reviews.bookingId, bookings.id))
+          .where(eq(bookings.photographerId, photographer.id));
 
-        // Check availability for date if specified
-        if (filter?.date) {
-          const availableOnDate = await this.checkPhotographerAvailableOnDate(
-            photographer.id,
-            filter.date
-          );
-          
-          if (!availableOnDate) {
-            return null;
-          }
-        }
-
-        // Get a sample portfolio item for preview
-        const [portfolioSample] = await db
+        // Get portfolio preview
+        const portfolio = await db
           .select()
-          .from(portfolioItems)
-          .where(eq(portfolioItems.photographerId, photographer.id))
-          .limit(1);
+          .from(portfolios)
+          .where(eq(portfolios.photographerId, photographer.id))
+          .limit(6);
 
         return {
           ...photographer,
-          categories: photographerCategories,
+          categories: photographerCats,
           rating: {
             average: ratingResult[0].averageRating,
             count: ratingResult[0].count,
           },
-          portfolioSample: portfolioSample?.imageUrl || null,
+          portfolioSample: portfolio[0]?.s3Url || null,
         };
       })
     );
@@ -218,23 +231,31 @@ export class DatabaseStorage implements IStorage {
   async checkPhotographerAvailableOnDate(photographerId: number, dateStr: string): Promise<boolean> {
     const result = await db
       .select()
-      .from(availability)
+      .from(services)
       .where(
         and(
-          eq(availability.photographerId, photographerId),
-          eq(availability.date, dateStr),
-          eq(availability.isBooked, false)
+          eq(services.photographerId, photographerId),
+          eq(services.shootType, dateStr),
         )
       );
-    
+
     return result.length > 0;
   }
 
   async getPhotographerById(id: number): Promise<any | undefined> {
     const [photographer] = await db
-      .select()
+      .select({
+        id: photographers.id,
+        bio: photographers.bio,
+        city: photographers.city,
+        lat: photographers.lat,
+        lng: photographers.lng,
+        avgRating: photographers.avgRating,
+        totalReviews: photographers.totalReviews,
+        isVerified: photographers.isVerified,
+      })
       .from(photographers)
-      .where(eq(photographers.id, id));
+      .innerJoin(users, eq(photographers.id, users.id));
 
     if (!photographer) {
       return undefined;
@@ -242,27 +263,21 @@ export class DatabaseStorage implements IStorage {
 
     const [user] = await db
       .select({
-        firstName: users.firstName,
-        lastName: users.lastName,
-        profileImageUrl: users.profileImageUrl,
+        name: users.name,
         email: users.email,
         phone: users.phone,
       })
       .from(users)
-      .where(eq(users.id, photographer.userId));
+      .where(eq(users.id, photographer.id));
 
     // Get categories
     const categoriesJoin = await db
       .select({
-        categoryId: photographerCategories.categoryId,
-        name: categories.name,
+        categoryId: services.id,
+        name: services.shootType,
       })
-      .from(photographerCategories)
-      .innerJoin(
-        categories,
-        eq(photographerCategories.categoryId, categories.id)
-      )
-      .where(eq(photographerCategories.photographerId, id));
+      .from(services)
+      .where(eq(services.photographerId, id));
 
     const photographerCats = categoriesJoin.map((c: any) => ({
       id: c.categoryId,
@@ -276,19 +291,20 @@ export class DatabaseStorage implements IStorage {
         count: sql<number>`COUNT(${reviews.id})`,
       })
       .from(reviews)
-      .where(eq(reviews.photographerId, id));
+      .innerJoin(bookings, eq(reviews.bookingId, bookings.id))
+      .where(eq(bookings.photographerId, photographer.id));
 
     // Get portfolio preview
     const portfolio = await db
       .select()
-      .from(portfolioItems)
-      .where(eq(portfolioItems.photographerId, id))
+      .from(portfolios)
+      .where(eq(portfolios.photographerId, id))
       .limit(6);
 
     return {
       ...photographer,
       ...user,
-      categories: photographerCategories,
+      categories: photographerCats,
       rating: {
         average: ratingResult[0].averageRating,
         count: ratingResult[0].count,
@@ -301,21 +317,33 @@ export class DatabaseStorage implements IStorage {
     const [photographer] = await db
       .select()
       .from(photographers)
-      .where(eq(photographers.userId, userId));
-    return photographer;
+      .innerJoin(users, eq(photographers.id, users.id))
+      .where(eq(users.id, parseInt(userId, 10)));
+
+    return photographer.photographers;
   }
 
   async getPhotographerUserById(photographerId: number): Promise<User | undefined> {
     const [photographer] = await db
-      .select()
+      .select({
+        id: photographers.id,
+        bio: photographers.bio,
+        city: photographers.city,
+        lat: photographers.lat,
+        lng: photographers.lng,
+        avgRating: photographers.avgRating,
+        totalReviews: photographers.totalReviews,
+        isVerified: photographers.isVerified,
+      })
       .from(photographers)
+      .innerJoin(users, eq(photographers.id, users.id))
       .where(eq(photographers.id, photographerId));
-    
+
     if (!photographer) {
       return undefined;
     }
-    
-    return this.getUser(photographer.userId);
+
+    return this.getUser(photographer.id.toString());
   }
 
   async createPhotographer(data: InsertPhotographer): Promise<Photographer> {
@@ -331,7 +359,6 @@ export class DatabaseStorage implements IStorage {
       .update(photographers)
       .set({
         ...data,
-        updatedAt: new Date(),
       })
       .where(eq(photographers.id, id))
       .returning();
@@ -343,7 +370,6 @@ export class DatabaseStorage implements IStorage {
       .update(photographers)
       .set({
         isVerified,
-        updatedAt: new Date(),
       })
       .where(eq(photographers.id, id))
       .returning();
@@ -352,14 +378,14 @@ export class DatabaseStorage implements IStorage {
 
   // ===== CATEGORY OPERATIONS =====
   async getCategories(): Promise<any[]> {
-    return await db.select().from(categories);
+    return await db.select().from(services);
   }
 
   async getCategoryById(id: number): Promise<any | undefined> {
     const [category] = await db
       .select()
-      .from(categories)
-      .where(eq(categories.id, id));
+      .from(services)
+      .where(eq(services.id, id));
     return category;
   }
 
@@ -367,54 +393,53 @@ export class DatabaseStorage implements IStorage {
   async getPortfolio(photographerId: number): Promise<PortfolioItem[]> {
     return await db
       .select()
-      .from(portfolioItems)
-      .where(eq(portfolioItems.photographerId, photographerId));
+      .from(portfolios)
+      .where(eq(portfolios.photographerId, photographerId));
   }
 
   async addPortfolioItem(item: InsertPortfolioItem): Promise<PortfolioItem> {
     const [portfolioItem] = await db
-      .insert(portfolioItems)
+      .insert(portfolios)
       .values(item)
       .returning();
     return portfolioItem;
   }
 
   // ===== AVAILABILITY OPERATIONS =====
-  async getAvailability(photographerId: number): Promise<Availability[]> {
-    return await db
-      .select()
-      .from(availability)
-      .where(eq(availability.photographerId, photographerId))
-      .orderBy(availability.date, asc(availability.startTime));
+  async getAvailability(photographerId: number): Promise<AvailabilityType[]> {
+      return await db
+        .select()
+        .from(availability)
+        .where(eq(availability.photographerId, photographerId))
+        .orderBy(asc(availability.id));
   }
 
-  async addAvailability(data: InsertAvailability): Promise<Availability> {
-    const [availabilitySlot] = await db
-      .insert(availability)
-      .values(data)
-      .returning();
+  async addAvailability(data: InsertAvailability): Promise<AvailabilityType> {
+      const [availabilitySlot] = await db
+        .insert(availability)
+        .values(data)
+        .returning();
     return availabilitySlot;
   }
 
   async checkAvailability(
-    photographerId: number,
-    date: string,
-    startTime: string,
-    endTime: string
-  ): Promise<boolean> {
-    // Check if the photographer has availability for this time slot
-    const availabilitySlots = await db
-      .select()
-      .from(availability)
-      .where(
-        and(
-          eq(availability.photographerId, photographerId),
-          eq(availability.date, date),
-          eq(availability.startTime, startTime),
-          eq(availability.endTime, endTime),
-          eq(availability.isBooked, false)
-        )
-      );
+      photographerId: number,
+      date: string,
+      startTime: string,
+      endTime: string
+    ): Promise<boolean> {
+      // Check if the photographer has availability for this time slot
+      const availabilitySlots = await db
+        .select()
+        .from(availability)
+        .where(
+          and(
+            eq(availability.photographerId, photographerId),
+            eq(availability.date, date),
+            eq(availability.startTime, startTime),
+            eq(availability.endTime, endTime),
+          )
+        );
 
     return availabilitySlots.length > 0;
   }
@@ -422,29 +447,25 @@ export class DatabaseStorage implements IStorage {
   // ===== BOOKING OPERATIONS =====
   async getAllBookings(): Promise<any[]> {
     const bookingsData = await db.select().from(bookings);
-    
+
     return Promise.all(
       bookingsData.map(async (booking) => {
         const [customer] = await db
           .select({
-            firstName: users.firstName,
-            lastName: users.lastName,
+            name: users.name,
             email: users.email,
-            profileImageUrl: users.profileImageUrl,
           })
           .from(users)
-          .where(eq(users.id, booking.customerId));
+          .where(booking.customerId ? eq(users.id, booking.customerId) : undefined);
 
         const [photographer] = await db
           .select({
             id: photographers.id,
-            firstName: users.firstName,
-            lastName: users.lastName,
-            profileImageUrl: users.profileImageUrl,
+            name: users.name,
           })
           .from(photographers)
-          .innerJoin(users, eq(photographers.userId, users.id))
-          .where(eq(photographers.id, booking.photographerId));
+          .innerJoin(users, eq(photographers.id, users.id))
+          .where(eq(photographers.id, booking.photographerId as number));
 
         return {
           ...booking,
@@ -455,25 +476,23 @@ export class DatabaseStorage implements IStorage {
     );
   }
 
-  async getCustomerBookings(customerId: string): Promise<any[]> {
+  async getCustomerBookings(customerId: number): Promise<any[]> {
     const bookingsData = await db
       .select()
       .from(bookings)
       .where(eq(bookings.customerId, customerId))
-      .orderBy(desc(bookings.createdAt));
+      .orderBy(desc(bookings.date));
 
     return Promise.all(
       bookingsData.map(async (booking) => {
         const [photographer] = await db
           .select({
             id: photographers.id,
-            firstName: users.firstName,
-            lastName: users.lastName,
-            profileImageUrl: users.profileImageUrl,
+            name: users.name,
           })
           .from(photographers)
-          .innerJoin(users, eq(photographers.userId, users.id))
-          .where(eq(photographers.id, booking.photographerId));
+          .innerJoin(users, eq(photographers.id, users.id))
+          .where(eq(photographers.id, booking.photographerId as number));
 
         return {
           ...booking,
@@ -488,19 +507,17 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(bookings)
       .where(eq(bookings.photographerId, photographerId))
-      .orderBy(desc(bookings.createdAt));
+      .orderBy(desc(bookings.date));
 
     return Promise.all(
       bookingsData.map(async (booking) => {
         const [customer] = await db
           .select({
-            firstName: users.firstName,
-            lastName: users.lastName,
+            name: users.name,
             email: users.email,
-            profileImageUrl: users.profileImageUrl,
           })
           .from(users)
-          .where(eq(users.id, booking.customerId));
+          .where(booking.customerId ? eq(users.id, booking.customerId) : undefined);
 
         return {
           ...booking,
@@ -511,6 +528,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getBookingById(id: number): Promise<any | undefined> {
+
     const [booking] = await db
       .select()
       .from(bookings)
@@ -522,25 +540,20 @@ export class DatabaseStorage implements IStorage {
 
     const [customer] = await db
       .select({
-        firstName: users.firstName,
-        lastName: users.lastName,
+        name: users.name,
         email: users.email,
-        profileImageUrl: users.profileImageUrl,
       })
       .from(users)
-      .where(eq(users.id, booking.customerId));
+      .where(eq(users.id, booking.customerId as number));
 
     const [photographer] = await db
       .select({
         id: photographers.id,
-        userId: photographers.userId,
-        firstName: users.firstName,
-        lastName: users.lastName,
-        profileImageUrl: users.profileImageUrl,
+        name: users.name,
       })
       .from(photographers)
-      .innerJoin(users, eq(photographers.userId, users.id))
-      .where(eq(photographers.id, booking.photographerId));
+      .innerJoin(users, eq(photographers.id, users.id))
+      .where(eq(photographers.id, booking.photographerId as number));
 
     return {
       ...booking,
@@ -550,19 +563,6 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createBooking(data: InsertBooking): Promise<Booking> {
-    // Mark availability as booked
-    await db
-      .update(availability)
-      .set({ isBooked: true })
-      .where(
-        and(
-          eq(availability.photographerId, data.photographerId),
-          eq(availability.date, data.bookingDate),
-          eq(availability.startTime, data.startTime),
-          eq(availability.endTime, data.endTime)
-        )
-      );
-
     const [booking] = await db
       .insert(bookings)
       .values(data)
@@ -573,10 +573,7 @@ export class DatabaseStorage implements IStorage {
   async updateBookingStatus(id: number, status: string): Promise<Booking> {
     const [booking] = await db
       .update(bookings)
-      .set({
-        status,
-        updatedAt: new Date(),
-      })
+      .set({ status })
       .where(eq(bookings.id, id))
       .returning();
     return booking;
@@ -585,33 +582,28 @@ export class DatabaseStorage implements IStorage {
   async updateBookingPaymentIntent(id: number, paymentIntentId: string): Promise<Booking> {
     const [booking] = await db
       .update(bookings)
-      .set({
-        stripePaymentIntentId: paymentIntentId,
-        updatedAt: new Date(),
-      })
+      .set({ paymentIntentId })
       .where(eq(bookings.id, id))
       .returning();
     return booking;
   }
 
-  // ===== REVIEW OPERATIONS =====
   async getPhotographerReviews(photographerId: number): Promise<any[]> {
     const reviewsData = await db
       .select()
       .from(reviews)
-      .where(eq(reviews.photographerId, photographerId))
-      .orderBy(desc(reviews.createdAt));
+      .innerJoin(bookings, eq(reviews.bookingId, bookings.id))
+      .where(eq(bookings.photographerId, photographerId));
 
     return Promise.all(
       reviewsData.map(async (review) => {
         const [customer] = await db
           .select({
-            firstName: users.firstName,
-            lastName: users.lastName,
-            profileImageUrl: users.profileImageUrl,
+            name: users.name,
+            email: users.email,
           })
           .from(users)
-          .where(eq(users.id, review.customerId));
+          .where(eq(users.id, review.bookings.customerId as number));
 
         return {
           ...review,
@@ -620,30 +612,21 @@ export class DatabaseStorage implements IStorage {
       })
     );
   }
-
   async getReviewByBookingId(bookingId: number): Promise<Review | undefined> {
-    const [review] = await db
-      .select()
-      .from(reviews)
-      .where(eq(reviews.bookingId, bookingId));
+    const [review] = await db.select().from(reviews).where(eq(reviews.bookingId, bookingId));
     return review;
   }
-
   async createReview(data: InsertReview): Promise<Review> {
-    const [review] = await db
-      .insert(reviews)
-      .values(data)
-      .returning();
+    const [review] = await db.insert(reviews).values(data).returning();
     return review;
   }
 
-  // ===== DELIVERABLE OPERATIONS =====
+  // Deliverable operations
   async getDeliverables(bookingId: number): Promise<Deliverable[]> {
     return await db
       .select()
       .from(deliverables)
-      .where(eq(deliverables.bookingId, bookingId))
-      .orderBy(desc(deliverables.uploadedAt));
+      .where(eq(deliverables.bookingId, bookingId));
   }
 
   async addDeliverable(data: InsertDeliverable): Promise<Deliverable> {
@@ -654,13 +637,13 @@ export class DatabaseStorage implements IStorage {
     return deliverable;
   }
 
-  // ===== MESSAGE OPERATIONS =====
+  // Message operations
   async getBookingMessages(bookingId: number): Promise<Message[]> {
     return await db
       .select()
       .from(messages)
       .where(eq(messages.bookingId, bookingId))
-      .orderBy(asc(messages.sentAt));
+      .orderBy(asc(messages.id));
   }
 
   async sendMessage(data: InsertMessage): Promise<Message> {
@@ -672,4 +655,5 @@ export class DatabaseStorage implements IStorage {
   }
 }
 
-export const storage = new DatabaseStorage();
+const storage = new DatabaseStorage();
+export { storage };

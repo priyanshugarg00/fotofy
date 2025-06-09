@@ -1,6 +1,7 @@
 export default {
   plugins: {
-    tailwindcss: {},
+    'postcss-import': {},
+    tailwindcss: { config: 'A:/data/ShootVault/tailwind.config.ts' },
     autoprefixer: {},
   },
 }

@@ -15,12 +15,12 @@ const CategoryCard = ({ category }: CategoryCardProps) => {
   const defaultImages: Record<string, string> = {
     "Wedding": "https://images.unsplash.com/photo-1532712938310-34cb3982ef74?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&h=600&q=80",
     "Fashion": "https://images.unsplash.com/photo-1555529771-7888783a18d3?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&h=600&q=80",
-    "Baby & Family": "https://pixabay.com/get/gfada59a771dcef7c42a25231227ad9b2be584a11fdc465b48be6f216acc80cd632830038931585cae1defd563bfcf21b1685d849fae2fe7f8431937d88583de7_1280.jpg",
+    "Baby & Family": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRTSS6M8IHnyz9GatuskfjXkcJLIgmsFiUuyA&",
     "Pre-Wedding": "https://images.unsplash.com/photo-1621184455862-c163dfb30e0f?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&h=600&q=80",
     "Cinematic": "https://images.unsplash.com/photo-1585951237318-9ea5e175b891?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&h=600&q=80",
     "Portrait": "https://images.unsplash.com/photo-1542038784456-1ea8e935640e?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&h=600&q=80",
     "Event": "https://images.unsplash.com/photo-1540575467063-178a50c2df87?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&h=600&q=80",
-    "Maternity": "https://images.unsplash.com/photo-1595924737006-3cdf0f37e0a1?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&h=600&q=80",
+    "Maternity": "https://plus.unsplash.com/premium_photo-1676143321774-2eb55fd15f07?w=600&auto=format&fit=crop&q=60",
   };
 
   const defaultDescriptions: Record<string, string> = {

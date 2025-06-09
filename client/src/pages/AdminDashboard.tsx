@@ -39,6 +39,46 @@ import {
   Users
 } from "lucide-react";
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+start_line:66
+
+
+
+
+
+
+import { User } from "@/types/user";
+
+
+
+
+start_line:79
+
+
+
 const AdminDashboard = () => {
   const [_, setLocation] = useLocation();
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
@@ -67,22 +107,43 @@ const AdminDashboard = () => {
     document.title = "Admin Dashboard | ClickPro";
   }, []);
 
+
+
+
+
+
+
+
+
   // Fetch all users
-  const { data: users, isLoading: isUsersLoading } = useQuery({
+
+
+  const { data: users, isLoading: isUsersLoading } = useQuery<User[]>({
     queryKey: ["/api/admin/users"],
     enabled: !isAuthLoading && isAuthenticated && user?.role === "admin",
+    initialData: [],
   });
 
   // Fetch all photographers
   const { data: photographers, isLoading: isPhotographersLoading } = useQuery({
     queryKey: ["/api/photographers"],
     enabled: !isAuthLoading && isAuthenticated && user?.role === "admin",
+    initialData: [],
   });
 
+
+
+
+
+
+
+
   // Fetch all bookings
-  const { data: bookings, isLoading: isBookingsLoading } = useQuery({
+
+  const { data: bookings = [], isLoading: isBookingsLoading } = useQuery({
     queryKey: ["/api/bookings"],
     enabled: !isAuthLoading && isAuthenticated && user?.role === "admin",
+    initialData: [],
   });
 
   // Mutation to verify/unverify photographer
@@ -127,9 +188,22 @@ const AdminDashboard = () => {
   };
 
   // Show loading state
-  if (isAuthLoading || (isAuthenticated && user?.role !== "admin")) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 py-10">
+
+
+
+
+
+
+
+
+
+
+
+
+
+if (isAuthLoading || (isAuthenticated && user?.role !== "admin")) {
+  return (
+    <div className="max-w-7xl mx-auto px-4 py-10">
         <div className="animate-pulse">
           <div className="h-8 bg-gray-300 rounded w-1/4 mb-8"></div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -387,7 +461,7 @@ const AdminDashboard = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {users.map((user: any) => (
+                        {users!.map((user: any) => (
                           <TableRow key={user.id}>
                             <TableCell>
                               <div className="flex items-center gap-3">

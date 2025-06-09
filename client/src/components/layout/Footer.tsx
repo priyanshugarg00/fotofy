@@ -81,9 +81,9 @@ const Footer = () => {
                 <ul className="mt-4 space-y-4">
                   <li>
                     <Link href="/join">
-                      <a className="text-base text-gray-500 hover:text-gray-900">
+                      <Link href="/photographer-signup" className="text-base text-gray-500 hover:text-gray-900">
                         Join as Photographer
-                      </a>
+                      </Link>
                     </Link>
                   </li>
                   <li>

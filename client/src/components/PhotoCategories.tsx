@@ -15,7 +15,7 @@ const CategoryCard = ({ category }: { category: any }) => {
   const defaultImages = {
     "Wedding": "https://images.unsplash.com/photo-1532712938310-34cb3982ef74?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&h=600&q=80",
     "Fashion": "https://images.unsplash.com/photo-1555529771-7888783a18d3?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&h=600&q=80",
-    "Baby & Family": "https://pixabay.com/get/gfada59a771dcef7c42a25231227ad9b2be584a11fdc465b48be6f216acc80cd632830038931585cae1defd563bfcf21b1685d849fae2fe7f8431937d88583de7_1280.jpg",
+    "Baby & Family": "https://images.unsplash.com/photo-1657912230172-23f8b31665ed?w=600&auto=format&fit=crop&q=60",
     "Pre-Wedding": "https://images.unsplash.com/photo-1621184455862-c163dfb30e0f?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&h=600&q=80",
     "Cinematic": "https://images.unsplash.com/photo-1585951237318-9ea5e175b891?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&h=600&q=80",
     "Portrait": "https://images.unsplash.com/photo-1542038784456-1ea8e935640e?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&h=600&q=80",
@@ -73,6 +73,8 @@ const PhotoCategories = ({ categories }: PhotoCategoriesProps) => {
     { id: 4, name: "Pre-Wedding", description: "", imageUrl: "" },
     { id: 5, name: "Cinematic", description: "", imageUrl: "" },
     { id: 6, name: "Portrait", description: "", imageUrl: "" },
+    { id: 7, name: "Event", description: "", imageUrl: "" },
+    { id: 8, name: "Maternity", description: "", imageUrl: "" },
   ];
 
   const displayCategories = categories.length > 0 ? categories : defaultCategories;
@@ -85,7 +87,7 @@ const PhotoCategories = ({ categories }: PhotoCategoriesProps) => {
           <p className="mt-3 max-w-2xl mx-auto text-lg text-secondary-500">Find the perfect photographer for any occasion</p>
         </div>
         
-        <div className="mt-10 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-10 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {displayCategories.map((category) => (
             <CategoryCard key={category.id} category={category} />
           ))}
@@ -95,4 +97,5 @@ const PhotoCategories = ({ categories }: PhotoCategoriesProps) => {
   );
 };
 
+export { Category };
 export default PhotoCategories;

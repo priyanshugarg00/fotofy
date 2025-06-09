@@ -135,8 +135,8 @@ const HowItWorks = () => {
             </Button>
           </Link>
           <Link href="/join">
-            <Button variant="outline" size="lg">
-              Join as Photographer
+            <Button variant="outline" size="lg" asChild>
+              <Link href="/photographer-signup">Join as Photographer</Link>
             </Button>
           </Link>
         </div>

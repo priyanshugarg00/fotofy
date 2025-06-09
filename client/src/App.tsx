@@ -7,7 +7,10 @@ import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
 
 import NotFound from "@/pages/not-found";
+import LoginPage from "@/pages/LoginPage";
+import Signup from "@/pages/Signup";
 import Navbar from "@/components/layout/Navbar";
+import PhotographerSignupPage from "@/pages/PhotographerSignupPage";
 import Footer from "@/components/layout/Footer";
 import Home from "@/pages/Home";
 import Photographers from "@/pages/Photographers";
@@ -44,6 +47,9 @@ function Router() {
           <Route path="/about" component={About} />
           <Route path="/contact" component={Contact} />
           <Route path="/join-photographer" component={JoinPhotographer} />
+          <Route path="/photographer-signup" component={PhotographerSignupPage} />
+          <Route path="/login" component={LoginPage} />
+          <Route path="/signup" component={Signup} />
           <Route component={NotFound} />
         </Switch>
       </main>

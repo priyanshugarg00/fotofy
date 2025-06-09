@@ -34,7 +34,7 @@ const Navbar = () => {
     if (!name) return "U";
     return name
       .split(" ")
-      .map((n) => n[0])
+      .map((n) => n ? n[0] : "")
       .join("");
   };
 
@@ -76,12 +76,12 @@ const Navbar = () => {
                 className="relative h-8 w-8 rounded-full"
               >
                 <Avatar className="h-8 w-8">
-                  <AvatarImage 
-                    src={user?.profileImageUrl} 
-                    alt={`${user?.firstName} ${user?.lastName}`} 
+                  <AvatarImage
+                    src={user ? user.profileImageUrl : ""}
+                    alt={`${user ? user.firstName ?? "" : ""} ${user ? user.lastName ?? "" : ""}`}
                   />
                   <AvatarFallback>
-                    {getInitials(`${user?.firstName} ${user?.lastName}`)}
+                    {getInitials(`${user ? user.firstName ?? "" : ""} ${user ? user.lastName ?? "" : ""}`)}
                   </AvatarFallback>
                 </Avatar>
               </Button>
@@ -110,18 +110,20 @@ const Navbar = () => {
           asChild
           variant="default"
         >
-          <a href="/api/login">Login</a>
+          <a href="/login">Login</a>
         </Button>
-        <Button 
+        <Button
           asChild
           variant="outline"
           className="text-primary border-primary hover:bg-primary/10"
+          style={{display: 'none'}}
         >
           <a href="/api/login">Sign Up</a>
         </Button>
       </div>
     );
   };
+
 
   return (
     <nav className="bg-white shadow-sm">
@@ -204,19 +206,13 @@ const Navbar = () => {
                         </>
                       ) : (
                         <>
-                          <Button 
+                          <Button
                             className="flex-grow"
                             asChild
                           >
-                            <a href="/api/login">Login</a>
+                            <a href="/login">Login</a>
                           </Button>
-                          <Button 
-                            variant="outline"
-                            className="flex-grow text-primary border-primary"
-                            asChild
-                          >
-                            <a href="/api/login">Sign Up</a>
-                          </Button>
+                          
                         </>
                       )}
                     </div>

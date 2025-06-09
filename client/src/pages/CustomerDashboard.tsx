@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { Booking } from "@/types/booking";
 import { apiRequest } from "@/lib/queryClient";
 import {
   Tabs,
@@ -36,8 +37,9 @@ import {
   FileText, 
   Image, 
   MessageSquare, 
-  MoreVertical, 
-  Star
+  MoreVertical,
+  Star,
+  CheckCircle
 } from "lucide-react";
 
 const CustomerDashboard = () => {
@@ -64,10 +66,10 @@ const CustomerDashboard = () => {
   }, []);
 
   // Fetch bookings
-  const { data: bookings, isLoading: isBookingsLoading, refetch: refetchBookings } = useQuery({
-    queryKey: ["/api/bookings"],
-    enabled: !isAuthLoading && isAuthenticated,
-  });
+ const { data: bookings, isLoading: isBookingsLoading, refetch: refetchBookings } = useQuery<Booking[]>({
+  queryKey: ["/api/bookings"],
+  enabled: !isAuthLoading && isAuthenticated,
+});
 
   // Fetch messages for selected booking
   const { data: messages, isLoading: isMessagesLoading, refetch: refetchMessages } = useQuery({
@@ -115,7 +117,7 @@ const CustomerDashboard = () => {
     try {
       await apiRequest('POST', '/api/reviews', {
         bookingId,
-        photographerId: bookings.find((b: any) => b.id === bookingId)?.photographer.id,
+        photographerId: bookings?.find((b: Booking) => b.id === bookingId)?.photographerId,
         rating: reviewData.rating,
         review: reviewData.review,
       });
@@ -225,12 +227,12 @@ const CustomerDashboard = () => {
                   <div className="p-6">
                     <Icons.spinner className="h-6 w-6 animate-spin mx-auto" />
                   </div>
-                ) : bookings?.length > 0 ? (
+                ) : bookings!.length > 0 ? (
                   <ScrollArea className="h-[500px]">
                     <div className="divide-y">
-                      {bookings.map((booking: any) => (
-                        <div 
-                          key={booking.id} 
+                      {bookings?.map((booking: any) => (
+                        <div
+                          key={booking.id}
                           className={`p-4 cursor-pointer hover:bg-gray-50 ${selectedBookingId === booking.id ? 'bg-gray-50' : ''}`}
                           onClick={() => setSelectedBookingId(booking.id)}
                         >
@@ -382,9 +384,9 @@ const CustomerDashboard = () => {
                               <h3 className="font-semibold text-lg mb-4">Photographer</h3>
                               <div className="flex items-center mb-4">
                                 <Avatar className="h-12 w-12 mr-3">
-                                  <AvatarImage 
-                                    src={booking.photographer.profileImageUrl} 
-                                    alt={`${booking.photographer.firstName} ${booking.photographer.lastName}`} 
+                                  <AvatarImage
+                                    src={booking.photographer.profileImageUrl ?? undefined}
+                                    alt={`${booking.photographer.firstName} ${booking.photographer.lastName}`}
                                   />
                                   <AvatarFallback>
                                     {getInitials(booking.photographer.firstName, booking.photographer.lastName)}
@@ -641,11 +643,14 @@ const CustomerDashboard = () => {
                 <Calendar className="h-16 w-16 text-gray-300 mb-4" />
                 <h2 className="text-xl font-semibold text-gray-900 mb-2">No Booking Selected</h2>
                 <p className="text-gray-600 max-w-md mb-6">
-                  {bookings?.length > 0 
-                    ? "Select a booking from the sidebar to view details." 
-                    : "You don't have any bookings yet. Start by finding a photographer."}
+                  {(() => {
+                    const bookingsLength = bookings?.length ?? 0;
+                    return bookingsLength > 0
+                      ? "Select a booking from the sidebar to view details."
+                      : "You don't have any bookings yet. Start by finding a photographer.";
+                  })()}
                 </p>
-                {!bookings?.length && (
+                {!(bookings?.length ?? 0) && (
                   <Button onClick={() => setLocation("/photographers")}>
                     Find a Photographer
                   </Button>

@@ -103,5 +103,5 @@ export const Icons = {
     </svg>
   ),
   twitter: Twitter,
-  check: Check,
+  checks: Check,
 };

@@ -63,6 +63,7 @@ async function upsertUser(
     firstName: claims["first_name"],
     lastName: claims["last_name"],
     profileImageUrl: claims["profile_image_url"],
+    role: "user",
   });
 }
 
@@ -150,6 +151,7 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
     updateUserSession(user, tokenResponse);
     return next();
   } catch (error) {
-    return res.redirect("/api/login");
+    console.error("Token refresh failed:", error);
+    return res.status(401).json({ message: "Unauthorized: Token refresh failed" });
   }
 };

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Booking } from "@/types/booking";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -64,7 +65,8 @@ import {
   MessageSquare, 
   Upload,
   User,
-  X 
+  X,
+  FileText
 } from "lucide-react";
 
 const PhotographerDashboard = () => {
@@ -110,15 +112,22 @@ const PhotographerDashboard = () => {
   });
 
   // Fetch photographer bookings
-  const { data: bookings, isLoading: isBookingsLoading, refetch: refetchBookings } = useQuery({
+  const { data: bookings, isLoading: isBookingsLoading, refetch: refetchBookings } = useQuery<Booking[]>({
     queryKey: ["/api/bookings"],
     enabled: !isAuthLoading && isAuthenticated && user?.role === "photographer",
+    queryFn: async () => {
+      const response = await fetch("/api/bookings");
+      if (!response.ok) throw new Error("Failed to fetch bookings");
+      return response.json();
+    },
+    initialData: [],
   });
 
   // Fetch categories
   const { data: categories } = useQuery({
     queryKey: ["/api/categories"],
     enabled: !isAuthLoading && isAuthenticated && user?.role === "photographer",
+    initialData: [],
   });
 
   // Fetch messages for selected booking
@@ -620,9 +629,9 @@ const PhotographerDashboard = () => {
                               <div className="space-y-4">
                                 <div className="flex items-center">
                                   <Avatar className="h-12 w-12 mr-3">
-                                    <AvatarImage 
-                                      src={booking.customer.profileImageUrl} 
-                                      alt={`${booking.customer.firstName} ${booking.customer.lastName}`} 
+                                    <AvatarImage
+                                      src={booking.customer.profileImageUrl ?? ""}
+                                      alt={`${booking.customer.firstName} ${booking.customer.lastName}`}
                                     />
                                     <AvatarFallback>
                                       {getInitials(booking.customer.firstName, booking.customer.lastName)}
