@@ -20,7 +20,7 @@ const CategoryCard = ({ category }: { category: any }) => {
     "Cinematic": "https://images.unsplash.com/photo-1585951237318-9ea5e175b891?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&h=600&q=80",
     "Portrait": "https://images.unsplash.com/photo-1542038784456-1ea8e935640e?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&h=600&q=80",
     "Event": "https://images.unsplash.com/photo-1540575467063-178a50c2df87?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&h=600&q=80",
-    "Maternity": "https://images.unsplash.com/photo-1595924737006-3cdf0f37e0a1?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&h=600&q=80",
+    "Maternity": "https://images.unsplash.com/photo-1544620282-a141af6d3738?w=600&auto=format&fit=crop&q=60",
   };
 
   const getDescription = (categoryName: string) => {

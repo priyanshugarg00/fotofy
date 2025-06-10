@@ -62,7 +62,7 @@ const CustomerDashboard = () => {
 
   // Set page title
   useEffect(() => {
-    document.title = "Customer Dashboard | ClickPro";
+    document.title = "Customer Dashboard | Fotofy";
   }, []);
 
   // Fetch bookings

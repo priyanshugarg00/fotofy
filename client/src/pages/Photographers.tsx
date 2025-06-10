@@ -34,7 +34,7 @@ const Photographers = () => {
   
   // Set page title and description
   useEffect(() => {
-    document.title = "Browse Photographers | ClickPro";
+    document.title = "Browse Photographers | Fotofy";
     
     // Update meta description
     let metaDescription = document.querySelector('meta[name="description"]');

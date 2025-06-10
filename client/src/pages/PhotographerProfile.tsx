@@ -88,7 +88,7 @@ const PhotographerProfile = ({ id }: PhotographerProfileProps) => {
   // Set page title and description
   useEffect(() => {
     if (photographer) {
-      document.title = `${photographer.firstName} ${photographer.lastName} | ClickPro`;
+      document.title = `${photographer.firstName} ${photographer.lastName} | Fotofy`;
       
       // Update meta description
       let metaDescription = document.querySelector('meta[name="description"]');

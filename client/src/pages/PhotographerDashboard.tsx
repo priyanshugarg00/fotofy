@@ -97,7 +97,7 @@ const PhotographerDashboard = () => {
 
   // Set page title
   useEffect(() => {
-    document.title = "Photographer Dashboard | ClickPro";
+    document.title = "Photographer Dashboard | Fotofy";
   }, []);
 
   // Fetch photographer profile

@@ -27,7 +27,7 @@ const Home = () => {
 
   // Set page title and meta description
   useEffect(() => {
-    document.title = "ClickPro - Professional Photography Services On Demand";
+    document.title = "Fotofy - Professional Photography Services On Demand";
     
     // Update meta description
     let metaDescription = document.querySelector('meta[name="description"]');

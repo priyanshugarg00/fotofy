@@ -4,7 +4,7 @@ import "./index.css";
 import { ThemeProvider } from "./components/theme-provider";
 
 createRoot(document.getElementById("root")!).render(
-  <ThemeProvider defaultTheme="light" storageKey="clickpro-theme">
+  <ThemeProvider defaultTheme="light" storageKey="Fotofy-theme">
     <App />
   </ThemeProvider>
 );

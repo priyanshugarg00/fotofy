@@ -116,9 +116,8 @@ const Navbar = () => {
           asChild
           variant="outline"
           className="text-primary border-primary hover:bg-primary/10"
-          style={{display: 'none'}}
         >
-          <a href="/api/login">Sign Up</a>
+          <a href="/customer-signup">Sign Up</a>
         </Button>
       </div>
     );
@@ -132,7 +131,7 @@ const Navbar = () => {
           <div className="flex items-center">
             <div className="flex-shrink-0 flex items-center">
               <Link href="/">
-                <span className="text-primary font-heading font-bold text-2xl">ClickPro</span>
+                <span className="text-primary font-heading font-bold text-2xl">Fotofy</span>
               </Link>
             </div>
             <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
@@ -212,7 +211,12 @@ const Navbar = () => {
                           >
                             <a href="/login">Login</a>
                           </Button>
-                          
+                          <Button
+                            className="flex-grow"
+                            asChild
+                          >
+                            <a href="/customer-signup">Sign Up</a>
+                          </Button>
                         </>
                       )}
                     </div>

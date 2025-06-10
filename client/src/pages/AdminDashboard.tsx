@@ -104,7 +104,7 @@ const AdminDashboard = () => {
 
   // Set page title
   useEffect(() => {
-    document.title = "Admin Dashboard | ClickPro";
+    document.title = "Admin Dashboard | Fotofy";
   }, []);
 
 

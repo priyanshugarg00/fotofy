@@ -3,11 +3,11 @@ import React from "react";
 export default function About() {
   return (
     <div className="container mx-auto py-12 px-4 max-w-5xl">
-      <h1 className="text-4xl font-bold mb-8 text-center">About ClickPro</h1>
+      <h1 className="text-4xl font-bold mb-8 text-center">About Fotofy</h1>
       
       <div className="prose prose-lg max-w-none">
         <p className="lead mb-8">
-          ClickPro was founded with a simple yet powerful vision: to make professional photography accessible to everyone while creating opportunities for talented photographers to showcase their work and grow their business.
+          Fotofy was founded with a simple yet powerful vision: to make professional photography accessible to everyone while creating opportunities for talented photographers to showcase their work and grow their business.
         </p>
         
         <h2 className="text-2xl font-semibold mt-10 mb-4">Our Mission</h2>
@@ -75,12 +75,12 @@ export default function About() {
         
         <h2 className="text-2xl font-semibold mt-10 mb-4">Our Team</h2>
         <p>
-          ClickPro is powered by a passionate team of photographers, tech enthusiasts, and business professionals who understand both the art of photography and the needs of customers. Our diverse team brings together expertise in technology, customer service, and the photography industry to create a platform that truly serves the needs of our users.
+          Fotofy is powered by a passionate team of photographers, tech enthusiasts, and business professionals who understand both the art of photography and the needs of customers. Our diverse team brings together expertise in technology, customer service, and the photography industry to create a platform that truly serves the needs of our users.
         </p>
         
         <h2 className="text-2xl font-semibold mt-10 mb-4">Join Us</h2>
         <p className="mb-8">
-          Whether you're a customer looking for a photographer or a photographer looking to grow your business, ClickPro is the platform for you. Join our growing community today and be part of the photography revolution.
+          Whether you're a customer looking for a photographer or a photographer looking to grow your business, Fotofy is the platform for you. Join our growing community today and be part of the photography revolution.
         </p>
         
         <div className="flex flex-col md:flex-row gap-4 justify-center mt-8">

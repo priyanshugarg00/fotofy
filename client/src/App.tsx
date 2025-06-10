@@ -1,4 +1,5 @@
 import { Switch, Route } from "wouter";
+import AdminLoginPage from "@/pages/AdminLoginPage";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -8,7 +9,7 @@ import { Elements } from "@stripe/react-stripe-js";
 
 import NotFound from "@/pages/not-found";
 import LoginPage from "@/pages/LoginPage";
-import Signup from "@/pages/Signup";
+import CustomerSignup from "@/pages/CustomerSignup";
 import Navbar from "@/components/layout/Navbar";
 import PhotographerSignupPage from "@/pages/PhotographerSignupPage";
 import Footer from "@/components/layout/Footer";
@@ -49,7 +50,8 @@ function Router() {
           <Route path="/join-photographer" component={JoinPhotographer} />
           <Route path="/photographer-signup" component={PhotographerSignupPage} />
           <Route path="/login" component={LoginPage} />
-          <Route path="/signup" component={Signup} />
+          <Route path="/customer-signup" component={CustomerSignup} />
+          <Route path="/adminlogin" component={AdminLoginPage} />
           <Route component={NotFound} />
         </Switch>
       </main>

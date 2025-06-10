@@ -8,7 +8,7 @@ const Footer = () => {
           <div className="space-y-8 xl:col-span-1">
             <Link href="/">
               <span className="text-primary font-heading font-bold text-2xl cursor-pointer">
-                ClickPro
+                Fotofy
               </span>
             </Link>
             <p className="text-gray-500 text-base">
@@ -181,7 +181,7 @@ const Footer = () => {
           </div>
         </div>
         <div className="mt-12 border-t border-gray-200 pt-8">
-          <p className="text-base text-gray-400 text-center">&copy; {new Date().getFullYear()} ClickPro. All rights reserved.</p>
+          <p className="text-base text-gray-400 text-center">&copy; {new Date().getFullYear()} Fotofy. All rights reserved.</p>
         </div>
       </div>
     </footer>
