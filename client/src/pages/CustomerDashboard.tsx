@@ -227,7 +227,7 @@ const CustomerDashboard = () => {
                   <div className="p-6">
                     <Icons.spinner className="h-6 w-6 animate-spin mx-auto" />
                   </div>
-                ) : bookings!.length > 0 ? (
+                ) : bookings && bookings.length > 0 ? (
                   <ScrollArea className="h-[500px]">
                     <div className="divide-y">
                       {bookings?.map((booking: any) => (
